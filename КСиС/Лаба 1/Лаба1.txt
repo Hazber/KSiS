@@ -1,0 +1,134 @@
+#include <windows.h>
+#include <Npapi.h>
+#include <stdio.h>
+
+typedef struct _ASTAT_ {
+
+	ADAPTER_STATUS adapt;
+	NAME_BUFFER NameBuff[30];
+
+} ASTAT, *PASTAT;
+
+ASTAT Adapter;
+
+void GetMacAddr(void) {
+	NCB Ncb;
+	UCHAR uRetCode;
+	char NetName[50];
+	LANA_ENUM lenum;
+	int i;
+	memset(&Ncb, 0, sizeof(Ncb));
+	Ncb.ncb_command = NCBENUM;
+	Ncb.ncb_buffer = (UCHAR*)&lenum;
+	Ncb.ncb_length = sizeof(lenum);
+	uRetCode = Netbios(&Ncb);
+
+	for (i = 0; i < lenum.length; i++) {
+		memset(&Ncb, 0, sizeof(Ncb));
+		Ncb.ncb_command = NCBRESET;
+		Ncb.ncb_lana_num = lenum.lana[i];
+		uRetCode = Netbios(&Ncb);
+		memset(&Ncb, 0, sizeof(Ncb));
+		Ncb.ncb_command = NCBASTAT;
+		Ncb.ncb_lana_num = lenum.lana[i];
+
+		strcpy_s(Ncb.ncb_callname, 30, "*               ");
+		Ncb.ncb_buffer = (char*)&Adapter;
+		Ncb.ncb_length = sizeof(Adapter);
+		uRetCode = Netbios(&Ncb);
+		if (uRetCode == 0) {
+			printf("The Ethernet Number on LANA %d is:% 02x % 02x % 02x % 02x % 02x % 02x\n",
+				lenum.lana[i],
+				Adapter.adapt.adapter_address[0],
+				Adapter.adapt.adapter_address[1],
+				Adapter.adapt.adapter_address[2],
+				Adapter.adapt.adapter_address[3],
+				Adapter.adapt.adapter_address[4],
+				Adapter.adapt.adapter_address[5]);
+		}
+	}
+}
+
+
+BOOL EnumerateFunc(LPNETRESOURCE lpNet1) {
+	LPNETRESOURCE lpNet2;
+	HANDLE hEnum;
+	DWORD buff = 16384;
+	DWORD cnt = -1;
+	DWORD dwResult, res;
+
+	dwResult = WNetOpenEnum(RESOURCE_GLOBALNET, RESOURCETYPE_ANY, 0, lpNet1, &hEnum);
+
+	if (dwResult == NO_ERROR) {
+		lpNet2 = (LPNETRESOURCE)GlobalAlloc(GPTR, buff);
+		if (lpNet2 == NULL)
+			return FALSE;
+
+		do {
+			ZeroMemory(lpNet2, buff);
+
+			dwResult = WNetEnumResource(hEnum, &cnt, lpNet2, &buff);
+
+			if (dwResult == NO_ERROR) {
+
+				for (DWORD i = 0; i < cnt; i++) {
+					printf("%s: ", lpNet2[i].lpRemoteName);
+
+					switch (lpNet2[i].dwDisplayType) {
+					case RESOURCEDISPLAYTYPE_DIRECTORY:
+						printf("Directory\n");
+						break;
+					case RESOURCEDISPLAYTYPE_FILE:
+						printf("File\n");
+						break;
+					case RESOURCEDISPLAYTYPE_DOMAIN:
+						printf("Domain\n");
+						break;
+					case RESOURCEDISPLAYTYPE_SERVER:
+						printf("Server\n");
+						break;
+					case RESOURCEDISPLAYTYPE_NETWORK:
+						printf("Network\n");
+						break;
+					case RESOURCEDISPLAYTYPE_SHARE:
+						printf("Shared\n");
+						break;
+					case RESOURCEDISPLAYTYPE_GENERIC:
+						printf("Other\n");
+						break;
+					}
+
+					if (RESOURCEUSAGE_CONTAINER == (lpNet2[i].dwUsage & RESOURCEUSAGE_CONTAINER)) {
+						if (!EnumerateFunc(&lpNet2)) {
+							//printf("EnumerateFunc returned FALSE\n");
+						}
+					}
+					if ((RESOURCEUSAGE_CONNECTABLE == (lpNet2[i].dwUsage & RESOURCEUSAGE_CONNECTABLE))) {
+						res = NPAddConnection(&lpNet2, NULL, NULL);
+					}
+				}
+			}
+			else
+				return FALSE;
+		} while (dwResult != ERROR_NO_MORE_ITEMS);
+
+		if (WNetCloseEnum(hEnum) != NO_ERROR)
+			return FALSE;
+	}
+	else
+		return FALSE;
+
+	return TRUE;
+}
+
+
+void main(void) {
+	LPNETRESOURCE lpnr;
+	DWORD buff = 16384;
+	printf("MAC adresses are:\n");
+	GetMacAddr();
+	printf("NET Resources are:\n");
+	lpnr = (LPNETRESOURCE)GlobalAlloc(GPTR, buff);
+	EnumerateFunc(lpnr);
+	getchar();
+}

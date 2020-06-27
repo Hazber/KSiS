@@ -1,0 +1,99 @@
+using System;
+using System.Text;
+using System.Net;
+using System.Net.Sockets;
+
+namespace SocketTcpServer
+{
+    class Program
+    {
+        static int port = 8005; // порт для приема входящих запросов
+        static void Main(string[] args)
+        {
+            byte[] data = new byte[256];
+            // получаем адреса для запуска сокета
+            IPEndPoint ipPoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), port);
+
+            // создаем сокет
+            Socket listenSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            try
+            {
+                // связываем сокет с локальной точкой, по которой будем принимать данные
+                listenSocket.Bind(ipPoint);
+
+                // начинаем прослушивание
+                listenSocket.Listen(10);
+
+                Console.WriteLine("Сервер запущен. Ожидание подключений...");
+
+                while (true)
+                {
+                    Socket handler = listenSocket.Accept();
+
+                    /*  // получаем сообщение
+                      StringBuilder builder = new StringBuilder();
+                      int bytes = 0; // количество полученных байтов
+                      byte[] data = new byte[256]; // буфер для получаемых данных
+
+                      do
+                      {
+                          bytes = handler.Receive(data);
+                          builder.Append(Encoding.Unicode.GetString(data, 0, bytes));
+                      }
+                      while (handler.Available > 0);
+
+                      Console.WriteLine(DateTime.Now.ToShortTimeString() + ": " + builder.ToString());
+
+                      // отправляем ответ
+                      string message = "ваше сообщение доставлено";
+                      data = Encoding.Unicode.GetBytes(message);
+                      handler.Send(data);*/
+
+                    string message = "Вошли в сеть";
+                    data = Encoding.Unicode.GetBytes(message);
+                    handler.Send(data);
+
+                    Calculate(handler);
+                    // закрываем сокет
+                    handler.Shutdown(SocketShutdown.Both);
+                    handler.Close();
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+
+        }
+        static void Calculate(Socket socket)
+        {
+          
+            int BufferSize = 1024;
+            int BC = 1;
+            Random random = new Random();
+            TimeSpan DeltaTime = TimeSpan.Zero;
+
+            byte[] packet = new byte[BufferSize];
+            for (int i = 0; i < BC; i++)
+            {
+                socket.Receive(packet);
+            }
+            //while (socket.Available < 1) //Thread.Sleep(10);
+            DateTime timenow = DateTime.Now;
+            for (int i = 0; i < BC; i++)
+            {
+                random.NextBytes(packet);
+                socket.Send(packet);
+
+            }
+            DeltaTime = DateTime.Now - timenow;
+            double SendingTime = DeltaTime.TotalSeconds;
+            double mbytes = BufferSize / 1000.0 * BC / 1000.0;
+            double mbits = mbytes * 8;
+            double mbytesec = mbytes / SendingTime;
+            double mbitsec = mbits / SendingTime;
+            Console.WriteLine("UPL --- TS:{0}s {1:F3}MB {2:F3}Mb", SendingTime, mbytes, mbits);
+            Console.WriteLine("UPL --- TS:{0}s {1:F3}MB/s {2:F3}Mb/s", SendingTime, mbytesec, mbitsec);
+        }
+    }
+}

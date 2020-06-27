@@ -1,0 +1,89 @@
+using System;
+using System.Net;
+using System.Net.Sockets;
+using System.Text;
+using System.Threading;
+
+namespace UdpClientApp
+{
+    class Program
+    {
+        static string remoteAddress = "127.0.0.1"; 
+        static int remotePort = 8510; 
+        static int localPort = 8511;
+        static Socket listeningSocket;
+        static void Main(string[] args)
+        {
+            try
+            {
+                listeningSocket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+                Calculate(listeningSocket);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+            finally
+            {
+                listeningSocket.Shutdown(SocketShutdown.Both);
+                listeningSocket.Close();
+            }
+        }
+
+        static void Calculate(Socket socket)
+        {
+            int counter_send = 0;
+            int counter_recieve = 0;
+            int lost_packet = 0;
+            int BufferSize = 1024;
+            int BC = 1;
+            Random random = new Random();
+            TimeSpan DeltaTime = TimeSpan.Zero;
+            EndPoint remotePoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), remotePort);
+            IPEndPoint localIP = new IPEndPoint(IPAddress.Parse("127.0.0.1"), localPort);
+            listeningSocket.Bind(localIP);
+            EndPoint remoteIp = new IPEndPoint(IPAddress.Any, 0);
+            byte[] packet_send = new byte[BufferSize];
+            byte[] packet_recieve = new byte[BufferSize];
+           
+        
+            for (int i = 0; i < BC; i++)
+            {
+                counter_recieve = socket.ReceiveFrom(packet_recieve, ref remoteIp);
+            }
+            DateTime timenow = DateTime.Now;
+            for (int i = 0; i < BC; i++)
+            {
+                
+                counter_send = socket.SendTo(packet_recieve, remotePoint);
+            }
+            DeltaTime = DateTime.Now - timenow;
+
+            double SendingTime = DeltaTime.TotalSeconds;
+            double mbytes = BufferSize / 1000.0 * BC / 1000.0;
+            double mbits = mbytes * 8;
+            double mbytesec = mbytes / SendingTime;
+            double mbitsec = mbits / SendingTime;
+            lost_packet = counter_send - counter_recieve;
+            int bad_packet = Check(packet_send, packet_recieve, BufferSize);
+            Console.WriteLine("Time:{0}s MB:{1:F3}MB     Mb:{2:F3}Mb", SendingTime, mbytes, mbits);
+            Console.WriteLine("Time:{0}s MB:{1:F3}MB/s Mb\\s:{2:F3}Mb/s", SendingTime, mbytesec, mbitsec);
+            Console.WriteLine("You lose: {0}", lost_packet);
+            
+        }
+
+        static int Check(byte[] packet_send, byte[] packet_recieve, int BufferSize)
+        {
+            int lose = 0;
+           
+            for (int i = 0; i < BufferSize; i++)
+            {
+                if (packet_send[i] != packet_recieve[i])
+                    lose++;
+            }
+            return lose;
+
+        }
+
+    }
+}

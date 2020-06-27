@@ -1,0 +1,15 @@
+D:\КСиС\Лаба 3\WhoIS\WhoIS\bin\Debug\WhoIS.exe.config
+D:\КСиС\Лаба 3\WhoIS\WhoIS\bin\Debug\WhoIS.exe
+D:\КСиС\Лаба 3\WhoIS\WhoIS\bin\Debug\WhoIS.pdb
+D:\КСиС\Лаба 3\WhoIS\WhoIS\obj\Debug\WhoIS.csprojAssemblyReference.cache
+D:\КСиС\Лаба 3\WhoIS\WhoIS\obj\Debug\MainWindow.g.cs
+D:\КСиС\Лаба 3\WhoIS\WhoIS\obj\Debug\App.g.cs
+D:\КСиС\Лаба 3\WhoIS\WhoIS\obj\Debug\WhoIS_MarkupCompile.cache
+D:\КСиС\Лаба 3\WhoIS\WhoIS\obj\Debug\WhoIS_MarkupCompile.lref
+D:\КСиС\Лаба 3\WhoIS\WhoIS\obj\Debug\MainWindow.baml
+D:\КСиС\Лаба 3\WhoIS\WhoIS\obj\Debug\WhoIS.g.resources
+D:\КСиС\Лаба 3\WhoIS\WhoIS\obj\Debug\WhoIS.Properties.Resources.resources
+D:\КСиС\Лаба 3\WhoIS\WhoIS\obj\Debug\WhoIS.csproj.GenerateResource.cache
+D:\КСиС\Лаба 3\WhoIS\WhoIS\obj\Debug\WhoIS.csproj.CoreCompileInputs.cache
+D:\КСиС\Лаба 3\WhoIS\WhoIS\obj\Debug\WhoIS.exe
+D:\КСиС\Лаба 3\WhoIS\WhoIS\obj\Debug\WhoIS.pdb
